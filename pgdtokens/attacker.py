@@ -6,12 +6,12 @@ from pgdtokens.pgd import PGD
 class Attacker:
     def __init__(self):
         pass
-
-    def rank_attack_loss(self, pos_doc_s: torch.Tensor, neg_docs_s: torch.Tensor):
+    def rank_attack_loss(self, query_rep : torch.Tensor, pos_rep : torch.Tensor, neg_rep : torch.Tensor):
         '''
 
-        :param pos_doc_s: shape = [1, 1]
-        :param neg_docs_s: shape = [B, 1]
+        :param query_rep: shape = [1, dim]
+        :param pos_rep: shape = [1, dim]
+        :param neg_rep: shape = [B, dim]
         :return:
         '''
 
@@ -19,28 +19,34 @@ class Attacker:
 
         reduction = 'sum'
         loss_fct = nn.MarginRankingLoss(margin=margin, reduction=reduction)
-        num_neg = neg_docs_s.shape[0]
-        pos_doc_ss = pos_doc_s.repeat(num_neg, 1)
-        labels = torch.ones_like(pos_doc_ss)
-        computed_loss = loss_fct(pos_doc_ss, neg_docs_s, labels)
+
+        num_neg = neg_rep.shape[0]
+        
+        # dot product, shape = [B, 1]
+        pos_s = torch.mm(query_rep, pos_rep.transpose(0, 1))
+        neg_s = torch.mm(query_rep.repeat(num_neg, 1), neg_rep.transpose(0, 1))
+
+        pos_s = pos_s.repeat(num_neg, 1)
+
+        labels = torch.ones_like(pos_s)
+        computed_loss = loss_fct(pos_s, neg_s, labels)
         return computed_loss
 
-    def get_model_gradient(self, model, batch_list, attack_doc_input, device):
-
+    def get_model_gradient(self, model, query, docs):
         model.train()
         model.zero_grad()
 
-        for batch in batch_list:
-            batch = {k: torch.cat((attack_doc_input[k].unsqueeze(dim=0), v), dim=0) for k, v in batch.items()}
-            batch = {k: v.to(device) for k, v in batch.items()}
+        query, docs = query.to(model.device), docs.to(model.device)
 
-            outputs = model(**batch)
+        query_rep = model(**query)[0]
+        pos_rep = model(**docs[0])[0]
+        neg_rep = model(**docs[1:])[0]
 
-            # scores, shape = [B, 1]
-            attack_loss = self.rank_attack_loss(outputs[0], outputs[1:])
-
-            if attack_loss is not None:
-                attack_loss.backward()
+        loss = self.rank_attack_loss(query_rep, pos_rep, neg_rep)
+        if loss is not None:
+            loss.backward()
+    
+    
 
     def attack(self, model, batch_list, attack_doc_input, attack_word_idx, args,
                eps=0.009, max_iter=3):

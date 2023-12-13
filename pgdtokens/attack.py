@@ -5,19 +5,36 @@ from pyterrier.io import read_results
 import logging, argparse, os, time
 import pandas as pd
 from tqdm import tqdm
-
+from fire import Fire
 import torch
 from torch.utils.data import DataLoader
-from transformers import BertTokenizer
+from transformers import BertTokenizer, BertModel
 import ir_datasets as irds 
-from . import SemanticHelper, basicConfig
-from . import BERTWordRecover
+from . import SemanticHelper, basicConfig, BERTWordRecover
 from .attacker import Attacker
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='%(asctime)s-%(levelname)s-%(name)s- %(message)s',
                     datefmt='%d %H:%M:%S',
                     level=logging.INFO)
+
+
+def attack_probing_bertdot(model, 
+                           query,
+                           docs,
+                           word_re,
+                           attack_idx,
+                           batch_list, docid_list, attack_doc_id, tokenizer, sem_help, word_re, ori_score, ori_qds, qid):
+    
+    attacker = Attacker()
+
+    matrix = word_re.get_word_embedding(model)
+    frozen_matrix = matrix.clone().detach()
+    attacker.get_model_gradient(model, query, docs)
+    candidate = word_re.idx2word[attack_idx]
+
+    attacker.attack()
+
 
 
 def attack_by_testing_blackbox(ori_model, surr_model, batch_list, docid_list,
@@ -77,9 +94,11 @@ def attack_by_testing_blackbox(ori_model, surr_model, batch_list, docid_list,
 def main(config : dict):
     config = basicConfig(config)
 
-    model = TasB(config.model_id)
+    model = BertModel(config.model_id)
     tokenizer = BertTokenizer.from_pretrained(config.model_id)
     out_dir = config.out_dir
+    attack_id = config.attack_id
+    init_token = tokenizer.encode(config.init_token).input_ids[1]
 
     dataset = irds.load(config.dataset)
     documents = pd.DataFrame(dataset.docs_iter()).set_index('doc_id').text.to_dict()
@@ -94,21 +113,13 @@ def main(config : dict):
         docnos = row.docno
         target_docs = [documents[docno] for docno in docnos]
         original_scores = [initial_score_lookup[(qid, docno)] for docno in docnos]  
-        ranking = {docno : (text, score) for docno, text, score in zip(docnos, target_docs, original_scores)}
+        ranking = {docno : (tokenizer.encode(text).input_ids.to_list(), score) for docno, text, score in zip(docnos, target_docs, original_scores)}
         target_query = queries[qid]
         
-
-
-
-
-
-
-
-    
-
-
-    
-
+        for docno, (text, score) in ranking.items():
+            current = ranking.copy()
+            current.pop(docno)
+            text = [init_token] + text[1:] if attack_id == 0 else text[1:] + [init_token]
 
 if __name__ == "__main__":
-    main()
+    Fire(main)
