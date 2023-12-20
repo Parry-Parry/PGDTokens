@@ -38,7 +38,7 @@ class Attacker:
 
         query, docs = query.to(model.device), docs.to(model.device)
 
-        query_rep = model(**query)[0, :]
+        query_rep = model(**query).last_hidden_state[:, 0, :]
 
         n_batches = len(docs) // self.batch_size + len(docs) % self.batch_size > 0
 
