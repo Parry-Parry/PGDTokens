@@ -1,16 +1,16 @@
 import json
 import numpy as np 
 import torch
-from transformers import BertTokenizer, BertModel
+from transformers import AutoTokenizer, AutoModel
 from os.path import join
 from fire import Fire
 from tqdm import tqdm
 
 def embed_vocab(model_id : str, out_dir : str, sim : bool = False):
-    tok = BertTokenizer.from_pretrained(model_id)
+    tok = AutoTokenizer.from_pretrained(model_id)
     vocab = tok.get_vocab()
 
-    emb = BertModel.from_pretrained(model_id)
+    emb = AutoModel.from_pretrained(model_id)
 
     lookup = {}
     for k, _ in tqdm(vocab.items()):
