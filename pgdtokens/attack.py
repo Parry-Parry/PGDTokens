@@ -72,12 +72,12 @@ def main(config : str):
         target_docs = [documents[docno] for docno in docnos]
         original_scores = [initial_score_lookup[(qid, docno)] for docno in docnos]  
         ranking = {docno : (text, score) for docno, text, score in zip(docnos, target_docs, original_scores)}
-        target_query = tokenizer(queries[qid], return_tensors='pt').input_ids
+        target_query = tokenizer(queries[qid], return_tensors='pt')
         
         for target_docno, (text, _) in ranking.items():
             current = ranking.copy()
             current.pop(target_docno)
-            other_docs = [t for k, (t,s) in current.items()]
+            other_docs = [t for _, (t,_) in current.items()]
             docs = [text] + other_docs
             input_ids = tokenizer(docs, return_tensors='pt', padding=True)
             optimise(target_query, input_ids, model, param_name)
