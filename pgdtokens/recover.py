@@ -99,16 +99,15 @@ class WordRecover:
         return topk_norm, word_topk_list
 
 class BERTWordRecover(WordRecover):
-    def __init__(self, embed_name, bert_tokenizer, bert_vocab_path, max_query_length, max_doc_length):
+    def __init__(self, embed_name, bert_tokenizer):
         super(BERTWordRecover, self).__init__(embed_name)
         self.tokenizer = bert_tokenizer
-        self.embedding_path = bert_vocab_path
         self.word2idx = self.tokenizer.get_vocab()
         self.idx2word = {v: k for k, v in self.word2idx.items()}
         self.cls_id = self.tokenizer.cls_token_id
         self.sep_id = self.tokenizer.sep_token_id
-        self.max_query_length = max_query_length
-        self.max_doc_length = max_doc_length
+        self.max_query_length = 30
+        self.max_doc_length = 256
 
     def get_word_embedding(self, model):
         emb_name = self.embed_name
