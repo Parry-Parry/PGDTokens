@@ -72,7 +72,7 @@ def main(config : str):
         target_docs = [documents[docno] for docno in docnos]
         original_scores = [initial_score_lookup[(qid, docno)] for docno in docnos]  
         ranking = {docno : (text, score) for docno, text, score in zip(docnos, target_docs, original_scores)}
-        target_query = tokenizer.encode(queries[qid]).input_ids.to_list()
+        target_query = tokenizer(queries[qid]).input_ids
         
         for target_docno, (text, _) in ranking.items():
             current = ranking.copy()
