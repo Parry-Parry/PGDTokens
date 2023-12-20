@@ -2,24 +2,27 @@ import numpy as np
 import torch
 from transformers import BertTokenizer, BertModel
 from os.path import join
+from fire import Fire
 
-def embed_vocab(self, model_id : str, out_dir : str):
+def embed_vocab(model_id : str, out_dir : str, sim : bool = False):
     tok = BertTokenizer.from_pretrained(model_id)
     vocab = tok.get_vocab()
 
     emb = BertModel.from_pretrained(model_id)
 
     lookup = []
-
     for k, _ in vocab.items():
-        ids = tok.encode(k).input_ids
-        embedding = emb(torch.tensor(ids)).last_hidden_state.mean(dim=1).detach().numpy()
+        ids = tok.encode(k)
+        embedding = emb(**torch.tensor(ids)).last_hidden_state.mean(dim=0).detach().numpy()
         lookup.append(embedding)
     
     lookup = np.array(lookup)
+    np.save(join(out_dir, 'vocab.npy'), vocab)
 
     # dot product with self
-    sim = np.dot(lookup, lookup.T)
+    if sim:
+        sim = np.dot(lookup, lookup.T)
+        np.save(join(out_dir, 'sim.npy'), sim)
 
-    np.save(join(out_dir, 'vocab.np'), vocab)
-    np.save(join(out_dir, 'sim.np'), sim)
+if __name__ == "__main__":
+    Fire(embed_vocab)

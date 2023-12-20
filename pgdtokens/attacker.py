@@ -4,8 +4,10 @@ from torch import nn
 from pgdtokens.pgd import PGD
 
 class Attacker:
-    def __init__(self):
-        pass
+    def __init__(self, batch_size : int = 32):
+        self.batch_size = batch_size
+        self.
+
     def rank_attack_loss(self, query_rep : torch.Tensor, pos_rep : torch.Tensor, neg_rep : torch.Tensor):
         '''
 
@@ -38,13 +40,26 @@ class Attacker:
         query, docs = query.to(model.device), docs.to(model.device)
 
         query_rep = model(**query)[0, :]
-        pos_rep = model(**docs[0])[0, :]
-        neg_rep = model(**docs[1:])[:, 0, :]
 
+        n_batches = len(docs) // self.batch_size + len(docs) % self.batch_size > 0
+
+        reps = []
+        for idx in range(n_batches):
+            start_idx = idx * self.batch_size
+            end_idx = min((idx + 1) * self.batch_size, len(docs))
+
+            batch_inputs = {k: v[start_idx:end_idx] for k, v in docs.items()}
+            with torch.no_grad():
+                batch_outputs = model(**batch_inputs).last_hidden_state[:, 0, :]
+            reps.append(batch_outputs)
+
+        reps = torch.cat(reps)
+        pos_rep = reps[0, :].unsqueeze(dim=0)
+        neg_rep = reps[1:, :]
+    
         loss = self.rank_attack_loss(query_rep, pos_rep, neg_rep)
         if loss is not None:
             loss.backward()
-
 
     def attack(self, 
                model, 
