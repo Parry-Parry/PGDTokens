@@ -78,7 +78,7 @@ class Attacker:
 
             self.get_model_gradient(model, query, docs)
 
-            pgd_attacker.attack(is_first_attack=(t == 0), epsilon=eps,
+            pgd_attacker.attack(is_first_attack=(t == 0),
                                 alpha=alpha, emb_name=name)
 
             model.zero_grad()
