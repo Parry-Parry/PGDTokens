@@ -52,8 +52,10 @@ def main(config : str):
     model = BertModel(model_id)
     tokenizer = BertTokenizer.from_pretrained(model_id)
     word_re = BERTWordRecover(tokenizer)
+    
     sem_helper = SemanticHelper(config.sim_embedding_path, tokenizer)
     sem_helper.build_vocab()
+
     for _name, _ in model.named_parameters():
         param_name = _name
     dataset = irds.load(dataset)
