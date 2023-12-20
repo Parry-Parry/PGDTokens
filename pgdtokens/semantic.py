@@ -12,7 +12,7 @@ class SemanticHelper:
         id2embed = {}
         embed2id = {}
         
-        with open(self.sim_embedding_path, 'r') as f:
+        with open(self.embedding_path, 'r') as f:
             json_data = json.load(f)
             for i, (k, v) in enumerate(json_data.items()):
                 idx2word[self.vocab[k]] = k
