@@ -17,7 +17,7 @@ def embed_vocab(model_id : str, out_dir : str, sim : bool = False):
         emb_input = tok.encode(k, add_special_tokens=False, return_tensors='pt')
         embedding = emb(emb_input).last_hidden_state[0, :].squeeze(dim=0).detach().numpy()
         assert embedding.shape == (768,), embedding.shape
-        lookup[k] = embedding.to_list()
+        lookup[k] = embedding.tolist()
     
     with open(join(out_dir, 'vocab.json'), 'w') as f:
         json.dump(lookup, f)
