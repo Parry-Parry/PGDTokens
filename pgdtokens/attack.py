@@ -59,10 +59,10 @@ def main(config : str):
         param_name = _name
 
     word_re = BERTWordRecover(param_name, tokenizer)
-    
+
     dataset = irds.load(dataset)
     documents = pd.DataFrame(dataset.docs_iter()).set_index('doc_id').text.to_dict()
-    queries = pd.DataFrame(dataset.query_iter()).set_index('query_id').text.to_dict()
+    queries = pd.DataFrame(dataset.queries_iter()).set_index('query_id').text.to_dict()
     docs = read_results(data_path)
     # group by query id and make list of documents
     ranking_lookup = docs.groupby('qid')['docno'].apply(list).to_dict()
