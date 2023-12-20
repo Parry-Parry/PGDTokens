@@ -49,7 +49,7 @@ def main(config : str):
     data_path = config.data_path
     out_dir = config.out_dir
 
-    model = AutoModel(model_id)
+    model = AutoModel.from_pretrained(model_id)
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     word_re = BERTWordRecover(tokenizer)
 
