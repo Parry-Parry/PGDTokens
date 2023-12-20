@@ -7,11 +7,11 @@ setuptools.setup(
     name="pgdtokens",
     version="0.0.1",
     author="Anonymous",
-    author_email=""
+    author_email="",
     description="",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url=""
+    url="",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
