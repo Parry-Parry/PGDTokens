@@ -6,7 +6,7 @@ import pandas as pd
 from tqdm import tqdm
 from fire import Fire
 import torch
-from transformers import BertTokenizer, BertModel
+from transformers import AutoTokenizer, AutoModel
 import ir_datasets as irds 
 from . import basicConfig, BERTWordRecover, SemanticHelper
 from .attacker import Attacker
@@ -30,7 +30,7 @@ def optimise(query_idx,
     attacker.get_model_gradient(model, query_idx, docs)
     attacker.attack(model, query_idx, docs, word_idx, param_name, max_iter=MAX_ITER)
 
-def get_words(model : BertModel,
+def get_words(model,
               word_re : BERTWordRecover,
               sem_helper : SemanticHelper):
     attacked_matrix = word_re.get_word_embedding(model)
@@ -49,10 +49,10 @@ def main(config : str):
     data_path = config.data_path
     out_dir = config.out_dir
 
-    model = BertModel(model_id)
-    tokenizer = BertTokenizer.from_pretrained(model_id)
+    model = AutoModel(model_id)
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
     word_re = BERTWordRecover(tokenizer)
-    
+
     sem_helper = SemanticHelper(config.sim_embedding_path, tokenizer)
     sem_helper.build_vocab()
 
