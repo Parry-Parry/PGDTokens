@@ -79,7 +79,7 @@ def main(config : str):
             current.pop(target_docno)
             other_docs = [t for k, (t,s) in current.items()]
             docs = [text] + other_docs
-            input_ids = tokenizer(docs, return_tensors='pt', padding=True).input_ids
+            input_ids = tokenizer(docs, return_tensors='pt', padding=True)
             optimise(target_query, input_ids, model, param_name)
     
     new_candidates = get_words(model, word_re=word_re, sem_helper=sem_helper)
