@@ -6,7 +6,6 @@ from pgdtokens.pgd import PGD
 class Attacker:
     def __init__(self, batch_size : int = 32):
         self.batch_size = batch_size
-        self.
 
     def rank_attack_loss(self, query_rep : torch.Tensor, pos_rep : torch.Tensor, neg_rep : torch.Tensor):
         '''

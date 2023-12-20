@@ -1,30 +1,32 @@
 import numpy as np
+import json
 
 class SemanticHelper:
-    def __init__(self, sim_embedding_path, sim_embedding_npy_path):
-        self.sim_embedding_path = sim_embedding_path
-        self.sim_embedding_npy_path = sim_embedding_npy_path
+    def __init__(self, embedding_path, tokenizer):
+        self.embedding_path = embedding_path
+        self.vocab = tokenizer.get_vocab()
 
     def build_vocab(self):
         idx2word = {}
         word2idx = {}
-
-        print("Building vocab...")
-        with open(self.sim_embedding_path, 'r') as sef:
-            for line in sef:
-                word = line.split()[0]
-                if word not in word2idx:
-                    idx2word[len(idx2word)] = word
-                    word2idx[word] = len(idx2word) - 1
-
+        id2embed = {}
+        embed2id = {}
+        
+        with open(self.sim_embedding_path, 'r') as f:
+            json_data = json.load(f)
+            for i, (k, v) in enumerate(json_data.items()):
+                idx2word[self.vocab[k]] = k
+                word2idx[k] = self.vocab[k]
+                id2embed[self.vocab[k]] = v
+                embed2id[i] = self.vocab[k]
+        
+        embeddings = np.array(list(id2embed.values()))
+        
         self.idx2word = idx2word
         self.word2idx = word2idx
-
-    def load_embedding_cos_sim_matrix(self):
-        print('Load pre-computed cosine similarity matrix from {}'.format(self.sim_embedding_npy_path))
-        cos_sim = np.load(self.sim_embedding_npy_path)
-        print("Cos sim import finished!")
-        self.cos_sim_matrix = cos_sim
+        self.id2embed = id2embed
+        self.embed2id = embed2id
+        self.embeddings = embeddings
 
     def is_number(self, input):
         try:

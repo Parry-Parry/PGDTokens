@@ -8,7 +8,7 @@ from fire import Fire
 import torch
 from transformers import BertTokenizer, BertModel
 import ir_datasets as irds 
-from . import basicConfig, BERTWordRecover
+from . import basicConfig, BERTWordRecover, SemanticHelper
 from .attacker import Attacker
 from utility import yaml_load
 import numpy as np
@@ -30,16 +30,16 @@ def optimise(query_idx,
     attacker.get_model_gradient(model, query_idx, docs)
     attacker.attack(model, query_idx, docs, word_idx, param_name, max_iter=MAX_ITER)
 
-def get_words(embeddings : torch.Tensor, 
-              model : BertModel,
-              word_re : BERTWordRecover):
+def get_words(model : BertModel,
+              word_re : BERTWordRecover,
+              sem_helper : SemanticHelper):
     attacked_matrix = word_re.get_word_embedding(model)
     attacked_matrix = attacked_matrix.detach().cpu().numpy()
 
-    sim = np.dot(attacked_matrix, embeddings.T)
+    sim = np.dot(attacked_matrix, sem_helper.embeddings.T)
     sim_order = np.argsort(-sim, axis=0)[:, 1:1 + TOPK]
     # use word_re to get words
-    words = [word_re.idx2word[idx] for idx in sim_order]
+    words = [sem_helper.idx2word[sem_helper.embed2id[idx]] for idx in sim_order]
     return words
 
 def main(config : str):
@@ -47,19 +47,19 @@ def main(config : str):
     model_id = config.model_id
     dataset = config.dataset
     data_path = config.data_path
-    embeddings = config.embeddings
     out_dir = config.out_dir
 
     model = BertModel(model_id)
     tokenizer = BertTokenizer.from_pretrained(model_id)
     word_re = BERTWordRecover(tokenizer)
+    sem_helper = SemanticHelper(config.sim_embedding_path, tokenizer)
+    sem_helper.build_vocab()
     for _name, _ in model.named_parameters():
         param_name = _name
     dataset = irds.load(dataset)
     documents = pd.DataFrame(dataset.docs_iter()).set_index('doc_id').text.to_dict()
     queries = pd.DataFrame(dataset.query_iter()).set_index('query_id').text.to_dict()
     docs = read_results(data_path)
-    embeddings = np.load(embeddings)
     # group by query id and make list of documents
     ranking_lookup = docs.groupby('qid')['docno'].apply(list).to_dict()
     initial_score_lookup = docs.set_index(['qid', 'docno'])['score'].to_dict() 
@@ -80,7 +80,7 @@ def main(config : str):
             input_ids = tokenizer(docs, return_tensors='pt', padding=True).input_ids
             optimise(target_query, input_ids, model, param_name)
     
-    new_candidates = get_words(embeddings, model, word_re=word_re)
+    new_candidates = get_words(model, word_re=word_re, sem_helper=sem_helper)
     with open(out_dir, 'w') as f:
         for cand in new_candidates:
             f.write(cand + '\n')

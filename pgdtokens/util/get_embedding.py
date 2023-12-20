@@ -1,8 +1,10 @@
+import json
 import numpy as np 
 import torch
 from transformers import BertTokenizer, BertModel
 from os.path import join
 from fire import Fire
+from tqdm import tqdm
 
 def embed_vocab(model_id : str, out_dir : str, sim : bool = False):
     tok = BertTokenizer.from_pretrained(model_id)
@@ -10,15 +12,15 @@ def embed_vocab(model_id : str, out_dir : str, sim : bool = False):
 
     emb = BertModel.from_pretrained(model_id)
 
-    lookup = []
-    for k, _ in vocab.items():
-        ids = tok.encode(k)
-        embedding = emb(**torch.tensor(ids)).last_hidden_state.mean(dim=0).detach().numpy()
-        lookup.append(embedding)
+    lookup = {}
+    for k, _ in tqdm(vocab.items()):
+        emb_input = tok.encode(k, add_special_tokens=False, return_tensors='pt')
+        embedding = emb(**emb_input).last_hidden_state[:1, :][0, :].detach().numpy()
+        assert embedding.shape == (768,), embedding.shape
+        lookup[k] = embedding.to_list()
     
-    lookup = np.array(lookup)
-    np.save(join(out_dir, 'vocab.npy'), vocab)
-
+    with open(join(out_dir, 'vocab.json'), 'w') as f:
+        json.dump(lookup, f)
     # dot product with self
     if sim:
         sim = np.dot(lookup, lookup.T)
