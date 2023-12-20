@@ -26,7 +26,7 @@ def optimise(query_idx,
              docs,
              model,
              param_name):
-    word_idx = docs['input_ids'][0]
+    word_idx = [1]
     attacker.get_model_gradient(model, query_idx, docs)
     attacker.attack(model, query_idx, docs, word_idx, param_name, max_iter=MAX_ITER)
 
@@ -78,7 +78,7 @@ def main(config : str):
             current = ranking.copy()
             current.pop(target_docno)
             other_docs = [t for _, (t,_) in current.items()]
-            docs = [text] + other_docs
+            docs = [f'[MASK] {text}'] + other_docs
             input_ids = tokenizer(docs, return_tensors='pt', padding=True)
             optimise(target_query, input_ids, model, param_name)
     
