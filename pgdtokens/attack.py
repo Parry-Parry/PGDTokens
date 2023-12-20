@@ -68,9 +68,7 @@ def main(config : str):
     ranking_lookup = docs.groupby('qid')['docno'].apply(list).to_dict()
     initial_score_lookup = docs.set_index(['qid', 'docno'])['score'].to_dict() 
 
-    for row in tqdm(ranking_lookup.iter_tuples()):
-        qid = row.qid
-        docnos = row.docno
+    for qid, docnos in tqdm(ranking_lookup.items()):
         target_docs = [documents[docno] for docno in docnos]
         original_scores = [initial_score_lookup[(qid, docno)] for docno in docnos]  
         ranking = {docno : (text, score) for docno, text, score in zip(docnos, target_docs, original_scores)}
