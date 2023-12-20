@@ -10,7 +10,7 @@ from transformers import AutoTokenizer, AutoModel
 import ir_datasets as irds 
 from . import basicConfig, BERTWordRecover, SemanticHelper
 from .attacker import Attacker
-from utility import yaml_load
+from utility import load_yaml
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ def get_words(model,
     return words
 
 def main(config : str):
-    config = basicConfig(**yaml_load(config))
+    config = basicConfig(**load_yaml(config))
     model_id = config.model_id
     dataset = config.dataset
     data_path = config.data_path
