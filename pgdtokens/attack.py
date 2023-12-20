@@ -51,13 +51,15 @@ def main(config : str):
 
     model = AutoModel.from_pretrained(model_id)
     tokenizer = AutoTokenizer.from_pretrained(model_id)
-    word_re = BERTWordRecover(tokenizer)
 
     sem_helper = SemanticHelper(config.embedding_path, tokenizer)
     sem_helper.build_vocab()
 
     for _name, _ in model.named_parameters():
         param_name = _name
+
+    word_re = BERTWordRecover(param_name, tokenizer)
+    
     dataset = irds.load(dataset)
     documents = pd.DataFrame(dataset.docs_iter()).set_index('doc_id').text.to_dict()
     queries = pd.DataFrame(dataset.query_iter()).set_index('query_id').text.to_dict()
