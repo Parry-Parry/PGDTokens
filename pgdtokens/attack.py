@@ -53,7 +53,7 @@ def main(config : str):
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     word_re = BERTWordRecover(tokenizer)
 
-    sem_helper = SemanticHelper(config.sim_embedding_path, tokenizer)
+    sem_helper = SemanticHelper(config.embedding_path, tokenizer)
     sem_helper.build_vocab()
 
     for _name, _ in model.named_parameters():
