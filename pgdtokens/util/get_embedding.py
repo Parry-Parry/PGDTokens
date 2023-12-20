@@ -15,7 +15,7 @@ def embed_vocab(model_id : str, out_dir : str, sim : bool = False):
     lookup = {}
     for k, _ in tqdm(vocab.items()):
         emb_input = tok.encode(k, add_special_tokens=False, return_tensors='pt')
-        embedding = emb(emb_input).last_hidden_state[0, :].squeeze(dim=0).detach().numpy()
+        embedding = emb(emb_input).last_hidden_state[0, :].mean(dim=0).detach().numpy()
         assert embedding.shape == (768,), embedding.shape
         lookup[k] = embedding.tolist()
     
