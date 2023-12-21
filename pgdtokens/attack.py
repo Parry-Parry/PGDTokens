@@ -37,7 +37,7 @@ def get_words(model,
     attacked_matrix = attacked_matrix.detach().cpu().numpy()
 
     sim = np.dot(sem_helper.embeddings, attacked_matrix)
-    sim_order = np.argsort(-sim, axis=0)[:TOPK, :]
+    sim_order = np.argsort(-sim, axis=0)[:TOPK]
     # use word_re to get words
     words = [sem_helper.idx2word[sem_helper.embed2id[idx]] for idx in sim_order]
     return words
